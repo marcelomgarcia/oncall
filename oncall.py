@@ -6,6 +6,7 @@
 import sys
 import configparser as cfgp
 import argparse as argp
+import datetime
 
 def load_users(file_users):
     """Return a dictionary with the users definition: 
@@ -47,6 +48,36 @@ def print_help():
     
     """)
 
+def oncall_add(oc_users, cmd_args):
+    """Add an entry to on-call schedule. 'oc_users' is a dictionary with valid 
+    users, and 'cmd_args' is the namespace with objects returned by 
+    'argparser.parse_args'. The namespace should contain the 'user', 'start' 
+    and 'end' of the on-call."""
+
+    # Return a line with a *valid* entry to the on-call schedule in the format:
+    # user | YYYY-MMM-DD | YYYY-MMM-DD
+    sched_entry = ""
+
+    # Check if the user is valid.
+    if cmd_args.user not in oc_users.keys():
+        print("User {0} is invalid. Valid users are: {1}.".format(cmd_args.user, 
+            ", ".join([kk for kk in oc_users.keys()])))
+        return ""
+
+    # Basic check of date consistency.
+    today = datetime.date.today()
+    oc_start = datetime.datetime.strptime(cmd_args.start, "%Y-%m-%d").date()
+    oc_end = datetime.datetime.strptime(cmd_args.end, "%Y-%m-%d").date()
+    if today > oc_start:
+        print("On-call can't start in past. At least today")
+        return ""
+    if oc_start > oc_end:
+        print("On-call can't ends before it starts! Check dates.")
+        return ""
+
+    # Check for next available date on the calendar file. In fact, the start 
+    # of the on-call should match the end of last entry on the file.
+     
 if __name__ == "__main__":
     # Load users from file.
     oc_users = load_users('./files/oncall_people.cfg')
@@ -69,6 +100,7 @@ if __name__ == "__main__":
         parser.add_argument("start", help="Start of the on-call")
         parser.add_argument("end", help="End of the on-call")
         args = parser.parse_args()
+        oncall_add(oc_users, args)
     elif sys.argv[0] == "save":
         parser = argp.ArgumentParser(prog="save", 
             description="Save HTML file with on-call calendar",
