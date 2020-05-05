@@ -50,27 +50,29 @@ def print_help():
 if __name__ == "__main__":
     # Load users from file.
     oc_users = load_users('./files/oncall_people.cfg')
-    # print(oc_users)
 
-    # Create a custom command line depending of the option/cmmand given.
-
+    # Check the number of arguments. If none was given, present an error 
+    # message and leave. Or if an argument was given, shift the command 
+    # line so the command becomes the program name (sys.argv[0]).
     if len(sys.argv) == 1:
         print_help()
-    elif sys.argv[1] == "add":
+    else:
+        sys.argv = sys.argv[1:]
+
+    # Create a custom command line depending of the option/cmmand given.
+    if sys.argv[0] == "add":
         parser = argp.ArgumentParser( 
             description="Add a new entry to on-call schedule.",
             usage="oncall.py add user start end")
-        parser.add_argument("add", help="Add entry to on-call schedule")
-        parser.add_argument("-u", "--user", help="Person doing the on-call")
-        parser.add_argument("-s","--start", help="Start of the on-call")
-        parser.add_argument("-e", "--end", help="End of the on-call")
+        parser.add_argument("user", help="Person doing the on-call")
+        parser.add_argument("start", help="Start of the on-call")
+        parser.add_argument("end", help="End of the on-call")
         args = parser.parse_args()
-    elif sys.argv[1] == "save":
+    elif sys.argv[0] == "save":
         parser = argp.ArgumentParser(prog="save", 
             description="Save HTML file with on-call calendar",
             usage="oncall.py save --file file_calendar.html")
-        parser.add_argument("save", help="Save HTML file")
-        parser.add_argument("-f", "--file", help="Person doing the on-call")
+        parser.add_argument("-f", "--file", help="HTML fileo")
         args = parser.parse_args()
     else:
         print("noo")
