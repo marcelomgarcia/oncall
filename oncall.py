@@ -29,6 +29,23 @@ def load_users(file_users):
         # Return 'users'. Empty in case of error.
         return users
 
+def print_help():
+    """Print a usage in case no argument is given, and exit"""
+    print("""
+    NEC on-call management system. 
+    
+    Usage:
+    oncall.py <command>,
+    were command is one of the following: 
+    - add: add a new entry to the on-call schedule,
+    - save: print on-call calendar to a HTML file,
+    - now: create the 'on-call now' file for operators,
+    - update: update the calendar and 'on-call now' file.
+
+    For each option to a command use:
+    oncall.py <command> -h
+    
+    """)
 
 if __name__ == "__main__":
     # Load users from file.
@@ -36,7 +53,10 @@ if __name__ == "__main__":
     # print(oc_users)
 
     # Create a custom command line depending of the option/cmmand given.
-    if sys.argv[1] == "add":
+
+    if len(sys.argv) == 1:
+        print_help()
+    elif sys.argv[1] == "add":
         parser = argp.ArgumentParser( 
             description="Add a new entry to on-call schedule.",
             usage="oncall.py add user start end")
@@ -54,4 +74,3 @@ if __name__ == "__main__":
         args = parser.parse_args()
     else:
         print("noo")
-    print(args)
