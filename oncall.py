@@ -63,7 +63,8 @@ if __name__ == "__main__":
     if sys.argv[0] == "add":
         parser = argp.ArgumentParser( 
             description="Add a new entry to on-call schedule.",
-            usage="oncall.py add user start end")
+            usage="oncall.py add user start end",
+            epilog="Date format for 'start' and 'end': YYYY-MM-DD")
         parser.add_argument("user", help="Person doing the on-call")
         parser.add_argument("start", help="Start of the on-call")
         parser.add_argument("end", help="End of the on-call")
