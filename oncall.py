@@ -121,5 +121,7 @@ if __name__ == "__main__":
             usage="oncall.py save --file file_calendar.html")
         parser.add_argument("-f", "--file", help="HTML fileo")
         args = parser.parse_args()
+    elif sys.argv[0] == "now":
+        # Who is on-call now?
     else:
         print("noo")
