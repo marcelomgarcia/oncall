@@ -54,10 +54,6 @@ def oncall_add(oc_users, cmd_args):
     'argparser.parse_args'. The namespace should contain the 'user', 'start' 
     and 'end' of the on-call."""
 
-    # Return a line with a *valid* entry to the on-call schedule in the format:
-    # user | YYYY-MMM-DD | YYYY-MMM-DD
-    sched_entry = ""
-
     # Check if the user is valid.
     if cmd_args.user not in oc_users.keys():
         print("User {0} is invalid. Valid users are: {1}.".format(cmd_args.user, 
@@ -69,18 +65,34 @@ def oncall_add(oc_users, cmd_args):
     oc_start = datetime.datetime.strptime(cmd_args.start, "%Y-%m-%d").date()
     oc_end = datetime.datetime.strptime(cmd_args.end, "%Y-%m-%d").date()
     if today > oc_start:
-        print("On-call can't start in past. At least today")
+        print("On-call can't start in past. At least today!")
         return ""
     if oc_start > oc_end:
         print("On-call can't ends before it starts! Check dates.")
         return ""
+    
+    # After basic checks of user and dates, return the next entry
+    return "{user} | {dt_start} | {dt_end}\n".format(user=cmd_args.user, 
+        dt_start=oc_start.strftime("%Y-%m-%d"),
+        dt_end=oc_end.strftime("%Y-%m-%d"))
 
-    # Check for next available date on the calendar file. In fact, the start 
-    # of the on-call should match the end of last entry on the file.
-     
+def oc_sched_add(oc_file, oc_new_entry):
+    """Add new entry 'oc_new_entry' to 'oc_file'. 'oc_file' is just a string
+    with the name of the file to open and append the entry."""
+    try:
+        with open(oc_file, 'a') as fin:
+            #fin.write(oc_new_entry + "\n")
+            fin.write(oc_new_entry)
+    except OSError:
+        print("OS error with {0}".format(oc_file))
+    except:
+        print("Something went wrong with file {0}".format(oc_file))
+    
+
 if __name__ == "__main__":
     # Load users from file.
-    oc_users = load_users('./files/oncall_people.cfg')
+    oc_users = load_users('files/oncall_people.cfg')
+    oc_sched_file = "files/oncall_sched.txt"
 
     # Check the number of arguments. If none was given, present an error 
     # message and leave. Or if an argument was given, shift the command 
@@ -100,7 +112,9 @@ if __name__ == "__main__":
         parser.add_argument("start", help="Start of the on-call")
         parser.add_argument("end", help="End of the on-call")
         args = parser.parse_args()
-        oncall_add(oc_users, args)
+        oc_new_entry = oncall_add(oc_users, args)
+        # Add entry to on-call schedule file.
+        oc_sched_add(oc_sched_file, oc_new_entry)
     elif sys.argv[0] == "save":
         parser = argp.ArgumentParser(prog="save", 
             description="Save HTML file with on-call calendar",
