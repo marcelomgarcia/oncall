@@ -88,11 +88,66 @@ def oc_sched_add(oc_file, oc_new_entry):
     except:
         print("Something went wrong with file {0}".format(oc_file))
     
+def oc_now(oc_users, oc_sched, oncall_now_file):
+    """Verify how is on-call now, and update system if there was change in 
+    person on duty or dates."""
+
+    # Open file with who is currently on call
+    with open(oncall_now_file) as fnow:
+        text = fnow.readline()
+    now_user = text.split("|")[0].strip()
+    now_start = datetime.datetime.strptime(text.split("|")[1].strip(), 
+            "%Y-%m-%d").date()
+    now_end = datetime.datetime.strptime(text.split("|")[2].strip(), 
+            "%Y-%m-%d").date()
+    
+    # Scan schedule file for who is on-call now.
+    with open(oc_sched, 'r') as fsched:
+        text = fsched.readlines()
+
+    today = datetime.date.today()
+
+    for line in text:
+        oc_user = line.split("|")[0].strip()
+        oc_start = datetime.datetime.strptime(line.split("|")[1].strip(), 
+            "%Y-%m-%d").date()
+        oc_end = datetime.datetime.strptime(line.split("|")[2].strip(), 
+            "%Y-%m-%d").date()
+
+        if oc_end > today and today > oc_start:
+            break
+
+    if not oc_users:
+        print("Error! The oncall user is empty! Something very wrong here!!!")
+        sys.exit(1)
+
+    if oc_user != now_user or oc_start != now_start or oc_end != now_end:
+        new_oc_now = "{user} | {dt_start} | {dt_end}\n".format(
+            user=oc_user,
+            dt_start=oc_start.strftime("%Y-%m-%d"),
+            dt_end=oc_end.strftime("%Y-%m-%d")
+        )
+        with open(oncall_now_file, 'w') as fnow:
+            fnow.write(new_oc_now)
+        
+        print("update page")
+        print("update cmk")
+    else:
+        print("Current on-duty engineer: {}".format(oc_users[oc_user]['name']))
+        print("Phone: {0}".format(oc_users[oc_user]['phone']))
+        print("From {dt_start} to {dt_end}".format(
+            dt_start=oc_start.strftime("%Y-%m-%d"),
+            dt_end=oc_end.strftime("%Y-%m-%d")))
+
+# 
+# Main routine
+#
 
 if __name__ == "__main__":
     # Load users from file.
     oc_users = load_users('files/oncall_people.cfg')
     oc_sched_file = "files/oncall_sched.txt"
+    on_call_now_file = "files/oncall_now.txt"
 
     # Check the number of arguments. If none was given, present an error 
     # message and leave. Or if an argument was given, shift the command 
@@ -123,5 +178,6 @@ if __name__ == "__main__":
         args = parser.parse_args()
     elif sys.argv[0] == "now":
         # Who is on-call now?
+        oc_now(oc_users, oc_sched_file, on_call_now_file)
     else:
         print("noo")
