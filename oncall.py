@@ -7,6 +7,10 @@ import sys
 import configparser as cfgp
 import argparse as argp
 import datetime
+import jinja2 as jj2
+import ast
+import requests
+import json
 
 def load_users(file_users):
     """Return a dictionary with the users definition: 
@@ -100,12 +104,12 @@ def oc_now(oc_users, oc_sched, oncall_now_file):
             "%Y-%m-%d").date()
     now_end = datetime.datetime.strptime(text.split("|")[2].strip(), 
             "%Y-%m-%d").date()
-    
-    # Scan schedule file for who is on-call now.
-    with open(oc_sched, 'r') as fsched:
-        text = fsched.readlines()
 
     today = datetime.date.today()
+
+    # Scan schedule file for who should be on-call now.
+    with open(oc_sched, 'r') as fsched:
+        text = fsched.readlines()
 
     for line in text:
         oc_user = line.split("|")[0].strip()
@@ -130,14 +134,74 @@ def oc_now(oc_users, oc_sched, oncall_now_file):
         with open(oncall_now_file, 'w') as fnow:
             fnow.write(new_oc_now)
         
-        print("update page")
-        print("update cmk")
+        update_oncall_page(oc_users[oc_user])
+        # Only change in Check-mk if the user has changed.
+        if oc_user != now_user:
+            update_cmk_sms(oc_user, oc_set=True)
+            update_cmk_sms(now_user, oc_set=False)
     else:
         print("Current on-duty engineer: {}".format(oc_users[oc_user]['name']))
-        print("Phone: {0}".format(oc_users[oc_user]['phone']))
+        print("Phone: {0}".format(oc_users[now_user]['phone']))
         print("From {dt_start} to {dt_end}".format(
-            dt_start=oc_start.strftime("%Y-%m-%d"),
-            dt_end=oc_end.strftime("%Y-%m-%d")))
+            dt_start=now_start.strftime("%Y-%m-%d"),
+            dt_end=now_end.strftime("%Y-%m-%d")))
+
+def update_cmk_sms(oc_user, oc_set):
+    """Add user to 'on-call' contact group so the engineer will receive 
+    SMS from the notifications."""
+
+    header = "{'action':'edit_users', '_username':'necbot', " + \
+        "'_secret':'C@KPWKESBEES@EOOLAQE', 'request_format':'json'," + \
+        "'output_format':'json', 'request': '{"
+    if oc_set:
+        user_payload   = '"users":{"' + oc_user + '"' + \
+            ':{"set_attributes":{"contactgroups":["dwdos", "on-call"]}}}}' + "'}"
+    else:
+        user_payload   = '"users":{"' + oc_user + '"' + \
+            ':{"set_attributes":{"contactgroups":["dwdos"]}}}}' + "'}"
+
+    payload_str = header + user_payload
+
+    edit_payload = ast.literal_eval(payload_str)
+
+    cmk_url = 'http://localhost/mysite/check_mk/webapi.py'
+    rr = requests.get(cmk_url, data=edit_payload)
+
+    rr_json = json.loads(rr.text)
+    ret_code = rr_json["result_code"]
+
+    if ret_code != 0:
+        print("Error while editing user {} in 'oncall' group".format(oc_user))
+        print("Aborting the program")
+        sys.exit(1)
+
+    # Activate the change
+    activate_payload = {
+        'action':'activate_changes', 
+        '_username':'necbot', 
+        '_secret':'C@KPWKESBEES@EOOLAQE', 
+        'request_format':'json','output_format':'json', 
+        'request': '{"sites":["mysite"], "allow_foreign_changes":"1"}'}
+    rr = requests.get(cmk_url, data=activate_payload)
+    rr_json = json.loads(rr.text)
+    ret_code = rr_json["result_code"]
+
+    if ret_code != 0:
+        print("Error while activating changes for user {}".format(oc_user))
+        print("Aborting the program")
+        sys.exit(1)
+
+
+def update_oncall_page(oc_user):
+    """Update web page for the operators with who is on-call now. The page
+    contains the name and phone of engineer on duty."""
+    www_dir = '/var/www/oncall/'
+    file_loader = jj2.FileSystemLoader('templates')
+    env = jj2.Environment(loader=file_loader)
+    oc_template = env.get_template('oncall_now.j2')
+    oc_page = oc_template.render(oc_vars=oc_user)
+    with open(www_dir + 'oncall_now.html','w') as fpage:
+        fpage.write(oc_page)
 
 # 
 # Main routine
