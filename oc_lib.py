@@ -32,8 +32,8 @@ def sched_new_get(cmd_args):
     Namespace 'cmd_args'."""
 
     return {'user': cmd_args.user, 
-        'start': cmd_args.start.strftime("%Y-%m-%d"),
-        'end': cmd_args.end.strftime("%Y-%m-%d")}
+        'start': datetime.datetime.strptime(cmd_args.start, "%Y-%m-%d").date(),
+        'end': datetime.datetime.strptime(cmd_args.end, "%Y-%m-%d").date()}
 
 
 def load_config(oc_config_file):
@@ -130,7 +130,7 @@ def is_sched(sched_new, oc_users):
         print("On-call can't start in past. At least today!")
         return False
     elif sched_new['start'] > sched_new['end']:
-        print("On-call can't ends before it starts! Check dates.")
+        print("End date can't be older than start date! Check dates.")
         return False
     else:
         return True
@@ -150,3 +150,12 @@ def oncall_sched_add(oc_sched_file, sched_new):
         print("OS error with {0}".format(oc_sched_file))
     except:
         print("Something went wrong with file {0}".format(oc_sched_file))
+
+def oc_now_print(oc_users, now_user):
+    """Print user doing the on-call now."""
+    user_name = oc_users[now_user['user']]['name']
+    print("On call now: {}".format(user_name))
+    print("From {}, until {}".format(
+        now_user['start'].strftime("%a, %d %B %Y"),
+        now_user['end'].strftime("%a, %d %B %Y")
+    ))
