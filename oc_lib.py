@@ -173,14 +173,14 @@ def oncall_now_set(sched_user, oncall_now_file):
     with open(oncall_now_file, 'w') as fsched:
         fsched.write(sched_user_str)
     
-def oncall_update_webpage(sched_user, oc_now_page):
+def oncall_update_webpage(sched_user_contact, oc_now_page):
     """Update web page for the operators with who is on-call now. The page
     contains the name and phone of engineer on duty."""
 
     file_loader = jj2.FileSystemLoader('templates')
     env = jj2.Environment(loader=file_loader)
     oc_template = env.get_template('oncall_now.j2')
-    oc_page = oc_template.render(oc_vars=sched_user)
+    oc_page = oc_template.render(oc_vars=sched_user_contact)
     with open(oc_now_page,'w') as fpage:
         fpage.write(oc_page)
 
