@@ -157,7 +157,7 @@ def oc_now_print(oc_users, now_user):
     user_phone = oc_users[now_user['user']]['phone']
 
     print("On-call now:")
-    print("{}, {}, ".format(user_name, user_phone))
+    print("{}, {}.".format(user_name, user_phone))
     print("From {}, until {}".format(
         now_user['start'].strftime("%a, %d %B %Y"),
         now_user['end'].strftime("%a, %d %B %Y")
