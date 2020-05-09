@@ -154,7 +154,10 @@ def oncall_sched_add(oc_sched_file, sched_new):
 def oc_now_print(oc_users, now_user):
     """Print user doing the on-call now."""
     user_name = oc_users[now_user['user']]['name']
-    print("On call now: {}".format(user_name))
+    user_phone = oc_users[now_user['user']]['phone']
+
+    print("On-call now:")
+    print("{}, {}, ".format(user_name, user_phone))
     print("From {}, until {}".format(
         now_user['start'].strftime("%a, %d %B %Y"),
         now_user['end'].strftime("%a, %d %B %Y")
