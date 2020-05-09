@@ -35,20 +35,19 @@ def sched_new_get(cmd_args):
         'start': datetime.datetime.strptime(cmd_args.start, "%Y-%m-%d").date(),
         'end': datetime.datetime.strptime(cmd_args.end, "%Y-%m-%d").date()}
 
-
 def load_config(oc_config_file):
     """Return the files used on on-call system"""
 
     try:
         oc_parser = cfgp.ConfigParser()
         oc_parser.read(oc_config_file)
-        defaults = oc_parser.defaults()
+        oncall_items = dict(oc_parser.items('ONCALL'))
         
     except: 
         print("Error loading configuration.")
-        defaults = {}
+        oncall_items = {}
     finally:
-        return defaults
+        return oncall_items
 
 def load_users(file_users):
     """Return a dictionary with the users definition: 
@@ -89,7 +88,7 @@ def oncall_sched_get(oc_sched_file):
         oc_end = datetime.datetime.strptime(line.split("|")[2].strip(), 
             "%Y-%m-%d").date()
 
-        if oc_end > today and today > oc_start:
+        if oc_end >= today and today >= oc_start:
             break
 
     if not oc_user:
@@ -151,7 +150,7 @@ def oncall_sched_add(oc_sched_file, sched_new):
     except:
         print("Something went wrong with file {0}".format(oc_sched_file))
 
-def oc_now_print(oc_users, now_user):
+def oncall_now_print(oc_users, now_user):
     """Print user doing the on-call now."""
     user_name = oc_users[now_user['user']]['name']
     user_phone = oc_users[now_user['user']]['phone']
@@ -162,3 +161,56 @@ def oc_now_print(oc_users, now_user):
         now_user['start'].strftime("%a, %d %B %Y"),
         now_user['end'].strftime("%a, %d %B %Y")
     ))
+
+def oncall_now_set(sched_user, oncall_now_file):
+    """Update the 'oncall now' file with scheduled user."""
+
+    sched_user_str = "{user} | {dt_start} | {dt_end}\n".format(
+        user=sched_user['user'],
+        dt_start=sched_user['start'].strftime("%Y-%m-%d"),
+        dt_end=sched_user['end'].strftime("%Y-%m-%d"))
+
+    with open(oncall_now_file, 'w') as fsched:
+        fsched.write(sched_user_str)
+    
+def oncall_update_webpage(sched_user, oc_now_page):
+    """Update web page for the operators with who is on-call now. The page
+    contains the name and phone of engineer on duty."""
+
+    file_loader = jj2.FileSystemLoader('templates')
+    env = jj2.Environment(loader=file_loader)
+    oc_template = env.get_template('oncall_now.j2')
+    oc_page = oc_template.render(oc_vars=sched_user)
+    with open(oc_now_page,'w') as fpage:
+        fpage.write(oc_page)
+
+def oncall_update(sched_user, now_user, oc_users, oc_now_file, oc_now_page):
+    """Update 'now' file, page for the operators and Check-mk on call user
+    with new information for 'sched_user'"""
+
+    # If there is a difference between the scheduled user and the one that
+    # is doing now, update the "now" part.
+    if sched_user['user'] != now_user['user'] or \
+        sched_user['start'] != now_user['start'] or \
+        sched_user['end'] != now_user['end']:
+
+        print("Updating 'oncall now' user with 'scheduled' info...")
+        print("Current: {}, {}, {}".format(
+            now_user['user'],
+            now_user['start'].strftime("%Y-%m-%d"),
+            now_user['end'].strftime("%Y-%m-%d")
+        ))
+        print("New    : {}, {}, {}".format(
+            sched_user['user'],
+            sched_user['start'].strftime("%Y-%m-%d"),
+            sched_user['end'].strftime("%Y-%m-%d")
+        ))
+        print("Updating 'oncall now' file...", end=" ")
+        oncall_now_set(sched_user, oc_now_file)
+        print("done")
+
+        print("Updating 'oncall now' webpage...", end=" ")
+        oncall_update_webpage(oc_users[sched_user['user']], oc_now_page)
+        print("done")
+    else:
+        print("Nothing to update")
