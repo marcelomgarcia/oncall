@@ -184,6 +184,54 @@ def oncall_update_webpage(sched_user_contact, oc_now_page):
     with open(oc_now_page,'w') as fpage:
         fpage.write(oc_page)
 
+def oncall_update_cmk(oc_user, oc_set):
+    """Add user to 'on-call' contact group so the engineer will receive 
+    SMS from the notifications. The 'oc_set' is a logical variable that
+    controls if the user is added ('true') or removed ('false') from the
+    'on-call' contact group. """
+
+    header = "{'action':'edit_users', '_username':'necbot', " + \
+        "'_secret':'C@KPWKESBEES@EOOLAQE', 'request_format':'json'," + \
+        "'output_format':'json', 'request': '{"
+    if oc_set:
+        user_payload   = '"users":{"' + oc_user + '"' + \
+            ':{"set_attributes":{"contactgroups":["dwdos", "on-call"]}}}}' + "'}"
+    else:
+        user_payload   = '"users":{"' + oc_user + '"' + \
+            ':{"set_attributes":{"contactgroups":["dwdos"]}}}}' + "'}"
+
+    payload_str = header + user_payload
+
+    # convert string to a dictionary.
+    edit_payload = ast.literal_eval(payload_str)
+
+    cmk_url = 'http://localhost/mysite/check_mk/webapi.py'
+    rr = requests.get(cmk_url, data=edit_payload)
+
+    rr_json = json.loads(rr.text)
+    ret_code = rr_json["result_code"]
+
+    if ret_code != 0:
+        print("Error while editing user {} in 'oncall' group".format(oc_user))
+        print("Aborting the program")
+        sys.exit(1)
+
+    # Activate the change
+    activate_payload = {
+        'action':'activate_changes', 
+        '_username':'necbot', 
+        '_secret':'C@KPWKESBEES@EOOLAQE', 
+        'request_format':'json','output_format':'json', 
+        'request': '{"sites":["mysite"], "allow_foreign_changes":"1"}'}
+    rr = requests.get(cmk_url, data=activate_payload)
+    rr_json = json.loads(rr.text)
+    ret_code = rr_json["result_code"]
+
+    if ret_code != 0:
+        print("Error while activating changes for user {}".format(oc_user))
+        print("Aborting the program")
+        sys.exit(1)
+
 def oncall_update(sched_user, now_user, oc_users, oc_now_file, oc_now_page):
     """Update 'now' file, page for the operators and Check-mk on call user
     with new information for 'sched_user'"""
@@ -212,5 +260,18 @@ def oncall_update(sched_user, now_user, oc_users, oc_now_file, oc_now_page):
         print("Updating 'oncall now' webpage...", end=" ")
         oncall_update_webpage(oc_users[sched_user['user']], oc_now_page)
         print("done")
+
+        unset_user = now_user['user']
+        print("Removing {} from 'on-call' contact group in Check-mk".format(
+            unset_user))
+        oncall_update_cmk(unset_user, oc_set=False)
+        print("done")
+
+        set_user = sched_user['user']
+        print("Adding {} to 'on-call' contact group in Check-mk".format(
+            set_user))
+        oncall_update_cmk(set_user, oc_set=True)
+        print("done")
+
     else:
         print("Nothing to update")
