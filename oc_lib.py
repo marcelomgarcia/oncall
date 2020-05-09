@@ -1,4 +1,6 @@
 # Auxiliary routines for the on-call system.
+# Marcelo Garcia
+# May/2020
 
 import sys
 import configparser as cfgp
