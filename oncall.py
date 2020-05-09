@@ -76,8 +76,7 @@ if __name__ == "__main__":
         # Who is on-call now?
         oc_lib.oncall_now_print(oc_users, now_user)
     elif sys.argv[0] == "update":
-        oc_lib.oncall_update(sched_user,now_user, oc_users, 
-        oc_config['oc_now_file'], oc_config['oc_now_page'])
+        oc_lib.oncall_update(sched_user, now_user, oc_users, oc_config['oc_now_file'], oc_config['oc_now_page'])
     elif sys.argv[0] == "save":
         parser = argp.ArgumentParser(
             description="Save HTML file with on-call calendar",
