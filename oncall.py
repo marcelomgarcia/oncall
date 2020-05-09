@@ -148,7 +148,9 @@ def oc_now(oc_users, oc_sched, oncall_now_file):
 
 def update_cmk_sms(oc_user, oc_set):
     """Add user to 'on-call' contact group so the engineer will receive 
-    SMS from the notifications."""
+    SMS from the notifications. The 'oc_set' is a logical variable that
+    controls if the user is added ('true') or removed ('false') from the
+    'on-call' contact group. """
 
     header = "{'action':'edit_users', '_username':'necbot', " + \
         "'_secret':'C@KPWKESBEES@EOOLAQE', 'request_format':'json'," + \
@@ -162,6 +164,7 @@ def update_cmk_sms(oc_user, oc_set):
 
     payload_str = header + user_payload
 
+    # convert string to a dictionary.
     edit_payload = ast.literal_eval(payload_str)
 
     cmk_url = 'http://localhost/mysite/check_mk/webapi.py'
