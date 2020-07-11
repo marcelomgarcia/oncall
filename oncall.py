@@ -81,7 +81,7 @@ if __name__ == "__main__":
         parser = argp.ArgumentParser(
             description="Save HTML file with on-call calendar",
             usage="oncall.py save --file file_calendar.html")
-        parser.add_argument("-f", "--file", help="HTML fileo")
+        parser.add_argument("-f", "--file", help="HTML file")
         args = parser.parse_args()
     else:
         print("noo")
