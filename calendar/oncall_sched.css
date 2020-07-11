@@ -1,0 +1,26 @@
+table {
+    width: 100%;
+}
+
+table, th, td {
+    border: 1px solid black;
+}
+
+th {
+  height: 100px;
+}
+
+td {
+  height: 70px;
+}
+.year {
+    background-color: #e0e0eb;
+    height: 130px;
+    font-size: x-large;
+}
+
+.month {
+    background-color: white;
+    font-size: medium;
+}
+
