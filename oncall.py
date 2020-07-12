@@ -4,6 +4,7 @@
 # May/2020.
 
 import oc_lib
+import oc_cal
 import sys
 import argparse as argp
 
@@ -83,5 +84,6 @@ if __name__ == "__main__":
             usage="oncall.py save --file file_calendar.html")
         parser.add_argument("-f", "--file", help="HTML file")
         args = parser.parse_args()
+        oc_cal.cal_save(oc_users, oc_config['oc_now_page'])
     else:
         print("noo")
