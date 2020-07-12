@@ -6,6 +6,10 @@ import calendar
 import bs4
 import datetime
 
+def cal_save(oc_people, oc_cal_file):
+    """Save the oncall schedule on a HTML file."""
+    print(oc_cal_file)
+
 def get_year(cal):
     """Return the year of the calendar"""
     tag = cal.find('th')
