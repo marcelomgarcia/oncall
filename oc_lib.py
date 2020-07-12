@@ -53,7 +53,7 @@ def load_config(oc_config_file):
 
 def load_users(file_users):
     """Return a dictionary with the users definition: 
-    name, phone, and email."""
+    name, phone, email, and sms/email."""
     users = {}
     # Create a dictionary with user info.
     try:
