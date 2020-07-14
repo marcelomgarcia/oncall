@@ -6,9 +6,34 @@ import calendar
 import bs4
 import datetime
 
-def cal_save(oc_people, oc_cal_file):
+def cal_save(oc_people, oc_sched_file, oc_web_dir):
     """Save the oncall schedule on a HTML file."""
-    print(oc_cal_file)
+
+    # Open calendar file from the current year.
+    cal_year = datetime.datetime.now().year
+    oc_cal_file = "{dir_cal}oncall_sched_{year}.html".format(dir_cal=oc_web_dir, year=cal_year)
+
+    # Open files, and catch expection in case file doesn't exists.
+    try:
+        # Open HTML file with calendar.
+        with open(oc_cal_file) as fbs:
+            soup = bs4.BeautifulSoup(fbs, 'html.parser')
+
+        # Open file file with the oncall schedule.
+        with open(oc_sched_file,'r') as ff:
+            text = ff.readlines()
+
+        for line in text:
+            line = line.strip()
+            oc_user = line.split("|")[0].strip()
+            oc_start = datetime.datetime.strptime(line.split("|")[1].strip(), 
+                "%Y-%m-%d").date()
+            oc_end = datetime.datetime.strptime(line.split("|")[2].strip(), 
+                "%Y-%m-%d").date()
+    except FileNotFoundError as not_found:
+        print("Error opening file {}. Aborting...".format(not_found.filename))
+
+    #print(oc_user, oc_start, oc_end)
 
 def get_year(cal):
     """Return the year of the calendar"""
