@@ -11,7 +11,7 @@ def cal_save(oc_people, oc_sched_file, oc_web_dir):
 
     # Open calendar file from the current year.
     cal_year = datetime.datetime.now().year
-    oc_cal_file = "{dir_cal}oncall_sched_{year}.html".format(dir_cal=oc_web_dir, year=cal_year)
+    oc_cal_file = "{dir_cal}/oncall_sched_{year}.html".format(dir_cal=oc_web_dir, year=cal_year)
 
     # Open files, and catch expection in case file doesn't exists.
     try:
@@ -32,6 +32,9 @@ def cal_save(oc_people, oc_sched_file, oc_web_dir):
                 "%Y-%m-%d").date()
     except FileNotFoundError as not_found:
         print("Error opening file {}. Aborting...".format(not_found.filename))
+
+    # Parsing the html tree.
+    soup.find_all('table')
 
     #print(oc_user, oc_start, oc_end)
 
