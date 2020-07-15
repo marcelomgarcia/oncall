@@ -9,16 +9,24 @@ import datetime
 def cal_save(oc_people, oc_sched_file, oc_web_dir):
     """Save the oncall schedule on a HTML file."""
 
-    # Open calendar file from the current year.
-    cal_year = datetime.datetime.now().year
-    oc_cal_file = "{dir_cal}/oncall_sched_{year}.html".format(dir_cal=oc_web_dir, year=cal_year)
-
     # Open files, and catch expection in case file doesn't exists.
     try:
+        # Open calendar file from the current year.
+        cal_year = datetime.datetime.now().year
+        oc_cal_file = "{dir_cal}/oncall_sched_{year}.html".format(dir_cal=oc_web_dir, year=cal_year)
+
         # Open HTML file with calendar.
         with open(oc_cal_file) as fbs:
             soup = bs4.BeautifulSoup(fbs, 'html.parser')
 
+        # We ignore the first tag 'table' because it's the year, we 
+        # want only the months.
+        tt_month = soup.find_all('table')[1:] 
+        print(len(tt_month))
+        
+        for tt in tt_month:
+            print(len(tt))
+            print(tt.contents[0])
         # Open file file with the oncall schedule.
         with open(oc_sched_file,'r') as ff:
             text = ff.readlines()
@@ -30,11 +38,9 @@ def cal_save(oc_people, oc_sched_file, oc_web_dir):
                 "%Y-%m-%d").date()
             oc_end = datetime.datetime.strptime(line.split("|")[2].strip(), 
                 "%Y-%m-%d").date()
+
     except FileNotFoundError as not_found:
         print("Error opening file {}. Aborting...".format(not_found.filename))
-
-    # Parsing the html tree.
-    soup.find_all('table')
 
     #print(oc_user, oc_start, oc_end)
 
