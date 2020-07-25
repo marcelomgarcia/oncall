@@ -263,17 +263,17 @@ def oncall_update(sched_user, now_user, oc_users, oc_now_file, oc_now_page):
         oncall_update_webpage(oc_users[sched_user['user']], oc_now_page)
         print("done")
 
-        unset_user = now_user['user']
-        print("Removing {} from 'on-call' contact group in Check-mk".format(
-            unset_user))
-        oncall_update_cmk(unset_user, oc_set=False)
-        print("done")
+        #unset_user = now_user['user']
+        #print("Removing {} from 'on-call' contact group in Check-mk".format(
+        #    unset_user))
+        #oncall_update_cmk(unset_user, oc_set=False)
+        #print("done")
 
-        set_user = sched_user['user']
-        print("Adding {} to 'on-call' contact group in Check-mk".format(
-            set_user))
-        oncall_update_cmk(set_user, oc_set=True)
-        print("done")
+        #set_user = sched_user['user']
+        #print("Adding {} to 'on-call' contact group in Check-mk".format(
+        #    set_user))
+        #oncall_update_cmk(set_user, oc_set=True)
+        #print("done")
 
     else:
         print("Nothing to update")
