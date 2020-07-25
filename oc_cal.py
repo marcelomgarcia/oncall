@@ -19,14 +19,8 @@ def cal_save(oc_people, oc_sched_file, oc_web_dir):
         with open(oc_cal_file) as fbs:
             soup = bs4.BeautifulSoup(fbs, 'html.parser')
 
-        # We ignore the first tag 'table' because it's the year, we 
-        # want only the months.
-        tt_month = soup.find_all('table')[1:] 
-        print(len(tt_month))
-        
-        for tt in tt_month:
-            print(len(tt))
-            print(tt.contents[0])
+        cc_year = soup.find('th').string
+
         # Open file file with the oncall schedule.
         with open(oc_sched_file,'r') as ff:
             text = ff.readlines()
