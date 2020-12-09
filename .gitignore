@@ -5,3 +5,4 @@ files/*.bkp
 calendar/*html
 *.pyc
 *.swp
+.vscode/*
